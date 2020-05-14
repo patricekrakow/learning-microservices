@@ -1,6 +1,6 @@
 # Learning Microservices Architecture
 
-In this (single, but quite long) document, I am trying to give a detailed step-by-step instruction set - no hidden steps - to cover a complete journey from very simple Node.js codes implementing _services_ exposing _API endpoints_ to service mesh configuration.
+In this (single, but quite long) document, I am trying to give a detailed step-by-step instruction set - no hidden steps - to cover a complete journey from very simple Node.js codes implementing _services_ exposing _API endpoints_ to _service mesh_ configuration.
 
 This journey will go through the following technologies/platforms:
 
