@@ -26,22 +26,70 @@ This journey will go through the following technologies/platforms:
 
 In order to perform all these steps, I am using [AWS Cloud9](https://eu-west-1.console.aws.amazon.com/cloud9/home?region=eu-west-1) as a development environment, and [Google Cloud Platform](https://console.cloud.google.com/) to (easily) create Kubernetes clusters.
 
+### Change the prompt of my terminals
+
+At the time of writing Cloud9 comes with the following prompt:
+
+```
+ubuntu:~/environment $ echo \'$PS1\'
+```
+```
+'\[\033[01;32m\]$(_cloud9_prompt_user)\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]$(__git_ps1 " (%s)" 2>/dev/null) $ '
+```
+
+I like to make the following change to keep the path indication, but moving it one line up, so it does not eat space:
+
+```
+ubuntu:~/environment $ PS1='[\[\033[01;32m\]$(_cloud9_prompt_user)\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]$(__git_ps1 " (%s)" 2>/dev/null)]\n$ '
+```
+```
+[ubuntu:~/environment]
+$ 
+```
+
+Of course, if you want that change to be permanent, you will need to update the `~/.bashrc` file.
+
 ## Node.js
 
 ### How to install Node.js on a Linux machine
 
-_Missing information about how to install Node.js..._
+```
+[ubuntu:~/environment]
+$ nvm install --lts
+```
+```
+Installing latest LTS version.
+Downloading https://nodejs.org/dist/v12.16.3/node-v12.16.3-linux-x64.tar.xz...
+...
+Now using node v12.16.3 (npm v6.14.4)
+nvm_ensure_default_set: a version is required
+```
 
 ```
 [ubuntu:~/environment]
 $ node --version
-v10.20.1
+```
+```
+v12.16.3
+```
+
+```
+[ubuntu:~/environment]
+$ npm install -g npm
+```
+```
+/home/ubuntu/.nvm/versions/node/v12.16.3/bin/npm -> /home/ubuntu/.nvm/versions/node/v12.16.3/lib/node_modules/npm/bin/npm-cli.js
+/home/ubuntu/.nvm/versions/node/v12.16.3/bin/npx -> /home/ubuntu/.nvm/versions/node/v12.16.3/lib/node_modules/npm/bin/npx-cli.js
++ npm@6.14.5
+updated 5 packages in 7.22s
 ```
 
 ```
 [ubuntu:~/environment]
 $ npm --version
-6.14.4
+```
+```
+6.14.5
 ```
 
 ### How to create with Node.js a simple _service-b_ exposing an API endpoint
@@ -49,10 +97,12 @@ $ npm --version
 ```
 [ubuntu:~/environment]
 $ mkdir service-b
-
+```
+```
 [ubuntu:~/environment]
 $ cd service-b/
-
+```
+```
 [ubuntu:~/environment/service-b]
 $ 
 ```
@@ -81,6 +131,8 @@ $ touch package.json
 ```
 [ubuntu:~/environment/service-b]
 $ npm install
+```
+```
 npm notice created a lockfile as package-lock.json. You should commit this file.
 npm WARN service-b@1.0.0 No repository field.
 npm WARN service-b@1.0.0 No license field.
@@ -124,12 +176,15 @@ console.log(`Running on http://${HOSTNAME}:${PORT}`);
 ```
 [ubuntu:~/environment/service-b]
 $ npm start
-
+```
+```
 > service-b@1.0.0 start /home/ubuntu/environment/service-b
 > node app.js
 
 Running on http://0.0.0.0:3001
 ```
+
+Just keep it running for now and open a new terminal.
 
 ## Curl and jq
 
@@ -146,6 +201,8 @@ $ sudo apt-get install -y curl
 ```
 [ubuntu:~/environment]
 $ curl --version
+```
+```
 curl 7.58.0 (x86_64-pc-linux-gnu) libcurl/7.58.0 OpenSSL/1.1.1 zlib/1.2.11 libidn2/2.0.4 libpsl/0.19.1 (+libidn2/2.0.4) nghttp2/1.30.0 librtmp/2.3
 Release-Date: 2018-01-24
 Protocols: dict file ftp ftps gopher http https imap imaps ldap ldaps pop3 pop3s rtmp rtsp smb smbs smtp smtps telnet tftp 
@@ -165,6 +222,8 @@ $ sudo apt-get install -y jq
 ```
 [ubuntu:~/environment]
 $ jq --version
+```
+```
 jq-1.5-1-a5b5cbe
 ```
 
@@ -173,6 +232,8 @@ jq-1.5-1-a5b5cbe
 ```
 [ubuntu:~/environment]
 $ curl -s http://localhost:3001/path-01 | jq
+```
+```json
 {
   "message": "Hello from get /path-01",
   "internalInfo": {
@@ -198,11 +259,13 @@ $ curl -s http://localhost:3001/path-01 | jq
 
 ### How to install Docker on a Linux machine
 
-_Missing information about how to install Docker..._
+Docker is already installed on a AWS Cloud9 machine.
 
 ```
 [ubuntu:~/environment]
 $ docker --version
+```
+```
 Docker version 19.03.8, build afacb8b7f0
 ```
 
@@ -213,9 +276,17 @@ If necessary, go back to the `service-b` folder, where the source code files `pa
 ```
 [ubuntu:~/environment]
 $ cd service-b/
+```
+```
+[ubuntu:~/environment/service-b]
+$ 
+```
 
+```
 [ubuntu:~/environment/service-b]
 $ ls
+```
+```
 app.js  node_modules  package-lock.json  package.json
 ```
 
@@ -250,6 +321,8 @@ COPY . .
 ```
 [ubuntu:~/environment/service-b]
 $ docker build --tag patrice1972/service-b:1.0.0 .
+```
+```
 Sending build context to Docker daemon  2.009MB
 Step 1/7 : FROM node:current-slim
 current-slim: Pulling from library/node
@@ -294,24 +367,30 @@ Successfully tagged patrice1972/service-b:1.0.0
 
 ### How to create a Docker container running the _service-b_
 
+**_Warning_**. First you need to stop the `node app.js` process - that we started with `npm start` - in order to free the TCP port `3001`.
+
 ```
 [ubuntu:~/environment/service-b]
 $ docker run --publish 3001:3001 --detach patrice1972/service-b:1.0.0
-8acde250e9947b07dd8d86d2d0aae3ae89c8cc632957878bfe705c7595af3f53
+```
+```
+130f20b9a674647bccfe211a6774b48e9d67d65c2a0fb7bdc8abde69d49e2d91
 ```
 
 ```
 [ubuntu:~/environment/service-b]
 $ docker ps
-CONTAINER ID        IMAGE                         COMMAND                  CREATED             STATUS              PORTS                    NAMES
-8acde250e994        patrice1972/service-b:1.0.0   "docker-entrypoint.s…"   11 seconds ago      Up 10 seconds       0.0.0.0:8080->3001/tcp   gifted_albattani
 ```
-
-And now, you can call the _API endpoint_ by going to the following address <http://localhost:3001/path-01> using curl an jq:
+```
+CONTAINER ID        IMAGE                         COMMAND                  CREATED             STATUS              PORTS                    NAMES
+130f20b9a674        patrice1972/service-b:1.0.0   "docker-entrypoint.s…"   27 seconds ago      Up 26 seconds       0.0.0.0:3001->3001/tcp   sad_borg
+```
 
 ```
 [ubuntu:~/environment/service-b]
 $ curl -s http://localhost:3001/path-01 | jq
+```
+```json
 {
   "message": "Hello from get /path-01",
   "internalInfo": {
@@ -319,31 +398,40 @@ $ curl -s http://localhost:3001/path-01 | jq
     "version": "1.0.0",
     "hostname": {
       "configured": "0.0.0.0",
-      "fromOS": "8acde250e994"
+      "fromOS": "130f20b9a674"
     },
     "port": 3001
   }
 }
 ```
 
+If you want to stop this Docker container, just type the following command
+
 ```
 [ubuntu:~/environment/service-b]
-$ docker rm --force 8acde250e994
-8acde250e994
+$ docker rm --force 130f20b9a674
+```
+```
+130f20b9a674
 ```
 
 ```
 [ubuntu:~/environment/service-b]
 $ docker ps -all
+```
+```
 CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
 ```
 
 ```
 [ubuntu:~/environment/service-b]
 $ docker images
+```
+```
 REPOSITORY              TAG                 IMAGE ID            CREATED             SIZE
-patrice1972/service-b   1.0.0               49a01c188cd6        12 minutes ago      170MB
-node                    current-slim        8d32307afb40        4 days ago          165MB
+patrice1972/service-b   1.0.0               50260307ea8e        7 minutes ago       170MB
+node                    current-slim        f1f04567e715        9 hours ago         165MB
+...
 ```
 
 ### How to push the _service-b_ Docker image to the Docker Hub registry
@@ -353,6 +441,8 @@ _Missing information about how to register on the Docker Hub registry..._
 ```
 [ubuntu:~/environment/service-b]
 $ docker login
+```
+```
 Login with your Docker ID to push and pull images from Docker Hub. If you don't have a Docker ID, head over to https://hub.docker.com to create one.
 Username: patrice1972
 Password: 
@@ -366,17 +456,19 @@ Login Succeeded
 ```
 [ubuntu:~/environment/service-b]
 $ docker push patrice1972/service-b:1.0.0
+```
+```
 The push refers to repository [docker.io/patrice1972/service-b]
-71a61d9eeb4d: Pushed 
-b41246acddf6: Pushed 
-4db83ac9b90f: Pushed 
-6b9a0cd1c999: Pushed 
-91ee6be5fc57: Mounted from library/node 
-d22eb286b341: Mounted from library/node 
-66d5400ac932: Mounted from library/node 
-a8bfdcd294e1: Mounted from library/node 
-cde96efde55e: Mounted from library/node 
-1.0.0: digest: sha256:9d24a0bc87925aa3a2f09e6ce392b0e873f0527c2a09b5dbbd7b0c1c3cda5960 size: 2202
+69af279303d4: Pushed 
+dc62183efc3e: Pushed 
+a9eaead0bbce: Pushed 
+ac5c289a2647: Pushed 
+ff761e4387bc: Mounted from library/node 
+2c3c9eb53f44: Mounted from library/node 
+a9ba2906d8f3: Mounted from library/node 
+29936941072e: Mounted from library/node 
+370ffef31d12: Mounted from library/node 
+1.0.0: digest: sha256:51b340cc3ae32ac2586ad76b2352c5945197a981a31cb59454cb641a39691c15 size: 2202
 ```
 
 ### How to create with bash a simple _service-a_ calling the API endpoint
@@ -384,10 +476,12 @@ cde96efde55e: Mounted from library/node
 ```
 [ubuntu:~/environment]
 $ mkdir service-a
-
+```
+```
 [ubuntu:~/environment]
 $ cd service-a/
-
+```
+```
 [ubuntu:~/environment/service-a]
 $ 
 ```
@@ -401,7 +495,7 @@ $ touch service-a.sh
 #!/bin/bash
 # chmod 755 service-a.sh
 
-if [ -z "$SERVICE_B_NAME" ] then
+if [ -z "$SERVICE_B_NAME" ]; then
   SERVICE_B_NAME=localhost
 fi
 while true
@@ -420,9 +514,11 @@ $ chmod 755 service-a.sh
 ```
 [ubuntu:~/environment/service-a]
 $ ./service-a.sh
-[DEBUG] hostname (OS): 8acde250e994
-[DEBUG] hostname (OS): 8acde250e994
-[DEBUG] hostname (OS): 8acde250e994
+```
+```
+[DEBUG] hostname (OS): 130f20b9a674
+[DEBUG] hostname (OS): 130f20b9a674
+[DEBUG] hostname (OS): 130f20b9a674
 ...
 ```
 
@@ -447,6 +543,8 @@ CMD /app/service-a.sh
 ```
 [ubuntu:~/environment/service-a]
 $ docker build --tag patrice1972/service-a:1.0.0 .
+```
+```
 Sending build context to Docker daemon  3.072kB
 Step 1/8 : FROM ubuntu:18.04
 18.04: Pulling from library/ubuntu
@@ -505,11 +603,21 @@ Successfully tagged patrice1972/service-a:1.0.0
 ### How to create a Docker container running the _service-a_
 
 ```
+[ubuntu:~/environment/service-b]
+$ hostname -I
+```
+```
+172.31.25.203 172.17.0.1 
+```
+
+```
 [ubuntu:~/environment/service-a]
-$ docker run --env SERVICE_B_NAME="172.31.34.146" patrice1972/service-a:1.0.0
-[DEBUG] hostname (OS): 78b4071b4d44
-[DEBUG] hostname (OS): 78b4071b4d44
-[DEBUG] hostname (OS): 78b4071b4d44
+$ docker run --env SERVICE_B_NAME="172.31.25.203" patrice1972/service-a:1.0.0
+```
+```
+[DEBUG] hostname (OS): 130f20b9a674
+[DEBUG] hostname (OS): 130f20b9a674
+[DEBUG] hostname (OS): 130f20b9a674
 ...
 ```
 
@@ -520,6 +628,8 @@ If necessary, you should re-login to the Docker Hub registry.
 ```
 [ubuntu:~/environment/service-a]
 $ docker login
+```
+```
 Login with your Docker ID to push and pull images from Docker Hub. If you don't have a Docker ID, head over to https://hub.docker.com to create one.
 Username: patrice1972
 Password: 
@@ -533,6 +643,8 @@ Login Succeeded
 ```
 [ubuntu:~/environment/service-a]
 $ docker push patrice1972/service-a:1.0.0
+```
+```
 The push refers to repository [docker.io/patrice1972/service-a]
 a68017e9c91c: Pushed 
 9fee0f5ba9a0: Pushed 
@@ -550,23 +662,27 @@ b7f7d2967507: Mounted from library/ubuntu
 
 ### How to create a Kubernetes cluster on GCP
 
-_Missing information about how to create a Kubernetes cluster on CGP..._
+[Create a Kubernetes Cluster on GCP](https://github.com/patricekrakow/learning-kubernetes/blob/master/create-a-cluster.md)
 
 ```
 $ kubectl version
-Client Version: version.Info{Major:"1", Minor:"15", GitVersion:"v1.15.9", GitCommit:"2e808b7cb054ee242b68e62455323aa783991f03", G
-itTreeState:"clean", BuildDate:"2020-01-18T23:33:14Z", GoVersion:"go1.12.12", Compiler:"gc", Platform:"linux/amd64"}
-Server Version: version.Info{Major:"1", Minor:"15+", GitVersion:"v1.15.11-gke.9", GitCommit:"e1af17fd873e15a48769e2c7b9851405f89e
-3d0d", GitTreeState:"clean", BuildDate:"2020-04-06T20:56:54Z", GoVersion:"go1.12.17b4", Compiler:"gc", Platform:"linux/amd64"}
+```
+```
+Client Version: version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.2", GitCommit:"52c56ce7a8272c798dbc29846288d7cd9fbae032", G
+itTreeState:"clean", BuildDate:"2020-04-16T11:56:40Z", GoVersion:"go1.13.9", Compiler:"gc", Platform:"linux/amd64"}
+Server Version: version.Info{Major:"1", Minor:"15+", GitVersion:"v1.15.11-gke.12", GitCommit:"fd078e6ed95d359cb2c9ca6561754806718
+c1c98", GitTreeState:"clean", BuildDate:"2020-04-20T22:33:20Z", GoVersion:"go1.12.17b4", Compiler:"gc", Platform:"linux/amd64"}
 ```
 
 ```
 $ kubectl get nodes
+```
+```
 NAME                                        STATUS   ROLES    AGE   VERSION
-gke-cluster-01-default-pool-ac4a8b10-95hp   Ready    <none>   8d    v1.15.11-gke.9
-gke-cluster-01-default-pool-ac4a8b10-qz9j   Ready    <none>   8d    v1.15.11-gke.9
-gke-cluster-01-default-pool-ac4a8b10-v7pn   Ready    <none>   8d    v1.15.11-gke.9
-gke-cluster-01-default-pool-ac4a8b10-z510   Ready    <none>   8d    v1.15.11-gke.9
+gke-cluster-01-default-pool-e6a715d1-41jx   Ready    <none>   31m   v1.15.11-gke.12
+gke-cluster-01-default-pool-e6a715d1-7nmg   Ready    <none>   31m   v1.15.11-gke.12
+gke-cluster-01-default-pool-e6a715d1-8nkx   Ready    <none>   31m   v1.15.11-gke.12
+gke-cluster-01-default-pool-e6a715d1-gs8w   Ready    <none>   31m   v1.15.11-gke.12
 ```
 
 ### How to deploy our _services_ on Kubernetes
@@ -599,27 +715,33 @@ spec:
 
 ```
 $ kubectl apply -f service-b.deployment.yaml
+```
+```
 deployment.apps/service-b created
 ```
 
 ```
 $ kubectl get pods
+```
+```
 NAME                         READY   STATUS    RESTARTS   AGE
-service-b-597c4ffc5b-26jzr   1/1     Running   0          78s
+service-b-597c4ffc5b-6fzbb   1/1     Running   0          27s
 ```
 
 ```
-$ kubectl describe pod service-b-597c4ffc5b-26jzr
-Name:           service-b-597c4ffc5b-26jzr
+$ kubectl describe pod service-b-597c4ffc5b-6fzbb
+```
+```
+Name:           service-b-597c4ffc5b-6fzbb
 Namespace:      default
 Priority:       0
-Node:           gke-cluster-01-default-pool-fb2d9fc6-m9pb/10.132.0.3
-Start Time:     Wed, 06 May 2020 11:58:33 +0200
+Node:           gke-cluster-01-default-pool-e6a715d1-41jx/10.132.0.6
+Start Time:     Thu, 14 May 2020 15:57:14 +0200
 Labels:         app=service-b
                 pod-template-hash=597c4ffc5b
 Annotations:    kubernetes.io/limit-ranger: LimitRanger plugin set: cpu request for container service-b
 Status:         Running
-IP:             10.40.2.4
+IP:             10.40.1.4
 ...
 ```
 
@@ -649,34 +771,42 @@ spec:
         image: patrice1972/service-a:1.0.0
         env:
         - name: SERVICE_B_NAME
-          value: "10.40.3.4"
+          value: "10.40.1.4"
 ```
 
 ```
 $ kubectl apply -f service-a.deployment.yaml
+```
+```
 deployment.apps/service-a created
 ```
 
 ```
 $ kubectl get pods
-kubectl get pods
+```
+```
 NAME                         READY   STATUS    RESTARTS   AGE
-service-a-8db6f8bfd-hnvt6    1/1     Running   0          37s
-service-b-597c4ffc5b-26jzr   1/1     Running   0          6m20s
+service-a-8658d565bc-xmffh   1/1     Running   0          27s
+service-b-597c4ffc5b-6fzbb   1/1     Running   0          4m54s
 ```
 
 ```
-$ kubectl logs service-a-8db6f8bfd-hnvt6
-[DEBUG] hostname (OS): service-b-7d88584dbf-jqg7v
-[DEBUG] hostname (OS): service-b-7d88584dbf-jqg7v
-[DEBUG] hostname (OS): service-b-7d88584dbf-jqg7v
+$ kubectl logs service-a-8658d565bc-xmffh
+```
+```
+[DEBUG] hostname (OS): service-b-597c4ffc5b-6fzbb
+[DEBUG] hostname (OS): service-b-597c4ffc5b-6fzbb
+[DEBUG] hostname (OS): service-b-597c4ffc5b-6fzbb
 ...
 ```
 
 If it does not work, you can debug the situation by connecting to the container running service-a with a shell interface using the following command:
 
 ```
-$ kubectl exec -it service-a-8db6f8bfd-hnvt6 -- /bin/bash
+$ kubectl exec -it service-a-8658d565bc-xmffh -- /bin/bash
+```
+```
+root@service-a-8658d565bc-xmffh:/app#
 ```
 
 ## Service Mesh
