@@ -24,7 +24,7 @@ This journey will go through the following technologies/platforms:
 
 ## Prerequisites
 
-In order to perform all these steps, I am using AWS Cloud9 as a development environment, and Google Cloud Platform to (easily) create Kubernetes clusters.
+In order to perform all these steps, I am using [AWS Cloud9](https://eu-west-1.console.aws.amazon.com/cloud9/home?region=eu-west-1) as a development environment, and [Google Cloud Platform](https://console.cloud.google.com/) to (easily) create Kubernetes clusters.
 
 ## Node.js
 
