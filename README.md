@@ -692,6 +692,7 @@ $ touch service-b.deployment.yaml
 ```
 
 ```yaml
+# service-b.deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -750,6 +751,7 @@ $ touch service-a.deployment.yaml
 ```
 
 ```yaml
+# service-a.deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -824,64 +826,221 @@ _Work in progress..._
 ### Consul Connect
 
 _The text below is still a work in progress..._
+`
+
+<https://www.consul.io/docs/platform/k8s/index.html>
 
 ```
-$ git clone https://github.com/hashicorp/consul-helm.git
-...
+$ kubectl cluster-info
+```
+```
+Kubernetes master is running at https://146.148.122.120
+GLBCDefaultBackend is running at https://146.148.122.120/api/v1/namespaces/kube-system/services/default-http-backend:http/proxy
+Heapster is running at https://146.148.122.120/api/v1/namespaces/kube-system/services/heapster/proxy
+KubeDNS is running at https://146.148.122.120/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+Metrics-server is running at https://146.148.122.120/api/v1/namespaces/kube-system/services/https:metrics-server:/proxy
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 ```
 
 ```
-$ touch consul-values.yaml
+$ helm version
+```
+```
+version.BuildInfo{Version:"v3.2.1", GitCommit:"fe51cd1e31e6a202cba7dead9552a6d418ded79a", GitTreeState:"clean", GoVersion:"go1.13
+.10"}
+```
+
+```
+$ helm repo add hashicorp https://helm.releases.hashicorp.com
+```
+```
+"hashicorp" has been added to your repositories
+```
+
+```
+$ helm search repo hashicorp/consul
+```
+```
+NAME                    CHART VERSION   APP VERSION     DESCRIPTION
+hashicorp/consul        0.21.0          1.7.3           Official HashiCorp Consul Chart
+```
+
+```
+$ touch helm-consul-values.yaml
 ```
 
 ```yaml
-global:
-  datacenter: dc1
-  image: "consul:1.7.0"
-  imageK8S: "hashicorp/consul-k8s:0.11.0"
-
 server:
   replicas: 1
   bootstrapExpect: 1
-
-client:
-  enabled: true
-  grpc: true
-
-ui:
-  enabled: true
-
-syncCatalog:
-  enabled: true
-  toConsul: true
-  toK8S: false
-  default: true
+  connect: true
 
 connectInject:
   enabled: true
-  #envoy image with curl and utils
-  imageEnvoy: nicholasjackson/consul-envoy:v1.7.0-v0.12.2
 
-  #true will inject by default, otherwise requires annotation
-  default: false
+client:
+  enabled: true
 
-  centralConfig:
-    enabled: true
-    defaultProtocol: "http"
-    proxyDefaults: |
-      {
-      "envoy_dogstatsd_url": "udp://127.0.0.1:9125"
-      }
+ui:
+  service:
+    type: 'LoadBalancer'
 ```
 
 ```
-$ helm install -f consul-values.yaml lab ./consul-helm --wait
-...
+$ helm install consul hashicorp/consul -f helm-consul-values.yaml
+```
+```
+NAME: consul
+LAST DEPLOYED: Thu May 14 17:28:03 2020
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+NOTES:
+Thank you for installing HashiCorp Consul!
+
+Now that you have deployed Consul, you should look over the docs on using
+Consul with Kubernetes available here:
+
+https://www.consul.io/docs/platform/k8s/index.html
+
+
+Your release is named consul.
+
+To learn more about the release if you are using Helm 2, run:
+
+  $ helm status consul
+  $ helm get consul
+
+To learn more about the release if you are using Helm 3, run:
+
+  $ helm status consul
+  $ helm get all consul
 ```
 
 ```
 $ kubectl get pods
+```
+```
 ...
 ```
 
-Let's edit the `service-a.deployment.yaml` to add 
+```
+$ kubectl get services
+```
+```
+...
+```
+
+Let's edit the `service-b.deployment.yaml` and `service-a.deployment.yaml` to add the annotation to automatically inject the sidecar:
+
+```yaml
+# service-b.deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-b
+  labels:
+    app: service-b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-b
+  template:
+    metadata:
+      labels:
+        app: service-b
+      annotations:
+        "consul.hashicorp.com/connect-inject": "true"
+    spec:
+      containers:
+      # This name will be the service name in Consul.
+      - name: service-b
+        image: patrice1972/service-b:1.0.0
+        ports:
+        - containerPort: 3001
+```
+
+```
+$ kubectl apply -f service-b.deployment.yaml
+```
+```
+deployment.apps/service-b created
+```
+
+```
+$ touch service-a.deployment.yaml
+```
+
+```yaml
+# service-a.deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-a
+  labels:
+    app: service-a
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-a
+  template:
+    metadata:
+      labels:
+        app: service-a
+      annotations:
+        "consul.hashicorp.com/connect-inject": "true"
+        "consul.hashicorp.com/connect-service-upstreams": "service-b:3001"
+    spec:
+      containers:
+      - name: service-a
+        image: patrice1972/service-a:1.0.0
+        env:
+        - name: SERVICE_B_NAME
+          value: "localhost"
+```
+
+```
+$ kubectl apply -f service-a.deployment.yaml
+```
+```
+deployment.apps/service-a configured
+```
+
+```
+$ kubectl get pods
+```
+```
+NAME                                                              READY   STATUS    RESTARTS   AGE
+helm-consul-consul-5zl6b                                          1/1     Running   0          18h
+helm-consul-consul-6tzxf                                          1/1     Running   0          18h
+helm-consul-consul-972jc                                          1/1     Running   0          18h
+helm-consul-consul-9ps8n                                          1/1     Running   0          18h
+helm-consul-consul-connect-injector-webhook-deployment-85ctnjqt   1/1     Running   0          18h
+helm-consul-consul-server-0                                       1/1     Running   0          18h
+service-a-79fcb7bb59-86s4n                                        3/3     Running   0          51s
+service-b-54bb466db8-sz7h9                                        3/3     Running   0          18h
+```
+
+```
+$ kubectl logs service-a-79fcb7bb59-86s4n service-a
+```
+```
+
+```
+
+If it does not work, you can debug the situation by connecting to the container running service-a with a shell interface using the following command:
+
+```
+$ kubectl exec -it service-a-7598597bc8-6pm4w service-a -- /bin/bash
+```
+```
+[DEBUG] hostname (OS): service-b-75f6f6b4f7-lfbll
+[DEBUG] hostname (OS): service-b-75f6f6b4f7-lfbll
+[DEBUG] hostname (OS): service-b-75f6f6b4f7-lfbll
+```
+
+#### Consul Connect SMI Adapter
+
+...
