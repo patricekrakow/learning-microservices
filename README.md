@@ -668,21 +668,19 @@ b7f7d2967507: Mounted from library/ubuntu
 $ kubectl version
 ```
 ```
-Client Version: version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.2", GitCommit:"52c56ce7a8272c798dbc29846288d7cd9fbae032", G
-itTreeState:"clean", BuildDate:"2020-04-16T11:56:40Z", GoVersion:"go1.13.9", Compiler:"gc", Platform:"linux/amd64"}
-Server Version: version.Info{Major:"1", Minor:"15+", GitVersion:"v1.15.11-gke.12", GitCommit:"fd078e6ed95d359cb2c9ca6561754806718
-c1c98", GitTreeState:"clean", BuildDate:"2020-04-20T22:33:20Z", GoVersion:"go1.12.17b4", Compiler:"gc", Platform:"linux/amd64"}
+Client Version: version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.2", GitCommit:"52c56ce7a8272c798dbc29846288d7cd9fbae032", GitTreeState:"clean", BuildDate:"2020-04-16T11:56:40Z", GoVersion:"go1.13.9", Compiler:"gc", Platform:"linux/amd64"}
+Server Version: version.Info{Major:"1", Minor:"16+", GitVersion:"v1.16.8-gke.15", GitCommit:"9cabee15e0922c3b36724de4866a98f6c2da5e6a", GitTreeState:"clean", BuildDate:"2020-05-01T21:47:04Z", GoVersion:"go1.13.8b4", Compiler:"gc", Platform:"linux/amd64"}
 ```
 
 ```
 $ kubectl get nodes
 ```
 ```
-NAME                                        STATUS   ROLES    AGE   VERSION
-gke-cluster-01-default-pool-e6a715d1-41jx   Ready    <none>   31m   v1.15.11-gke.12
-gke-cluster-01-default-pool-e6a715d1-7nmg   Ready    <none>   31m   v1.15.11-gke.12
-gke-cluster-01-default-pool-e6a715d1-8nkx   Ready    <none>   31m   v1.15.11-gke.12
-gke-cluster-01-default-pool-e6a715d1-gs8w   Ready    <none>   31m   v1.15.11-gke.12
+NAME                                        STATUS   ROLES    AGE     VERSION
+gke-cluster-01-default-pool-00f718cd-bp95   Ready    <none>   9m27s   v1.16.8-gke.15
+gke-cluster-01-default-pool-00f718cd-hdzj   Ready    <none>   9m27s   v1.16.8-gke.15
+gke-cluster-01-default-pool-00f718cd-kvxd   Ready    <none>   9m27s   v1.16.8-gke.15
+gke-cluster-01-default-pool-00f718cd-m5x3   Ready    <none>   9m27s   v1.16.8-gke.15
 ```
 
 ### How to deploy our _services_ on Kubernetes
@@ -834,11 +832,11 @@ _The text below is still a work in progress..._
 $ kubectl cluster-info
 ```
 ```
-Kubernetes master is running at https://146.148.122.120
-GLBCDefaultBackend is running at https://146.148.122.120/api/v1/namespaces/kube-system/services/default-http-backend:http/proxy
-Heapster is running at https://146.148.122.120/api/v1/namespaces/kube-system/services/heapster/proxy
-KubeDNS is running at https://146.148.122.120/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
-Metrics-server is running at https://146.148.122.120/api/v1/namespaces/kube-system/services/https:metrics-server:/proxy
+Kubernetes master is running at https://35.195.63.166
+GLBCDefaultBackend is running at https://35.195.63.166/api/v1/namespaces/kube-system/services/default-http-backend:http/proxy
+KubeDNS is running at https://35.195.63.166/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+Metrics-server is running at https://35.195.63.166/api/v1/namespaces/kube-system/services/https:metrics-server:/proxy
+
 To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 ```
 
@@ -846,8 +844,33 @@ To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 $ helm version
 ```
 ```
-version.BuildInfo{Version:"v3.2.1", GitCommit:"fe51cd1e31e6a202cba7dead9552a6d418ded79a", GitTreeState:"clean", GoVersion:"go1.13
-.10"}
+Client: &version.Version{SemVer:"v2.14.1", GitCommit:"5270352a09c7e8b6e8c9593002a73535276507c0", GitTreeState:"clean"}
+Error: could not find tiller
+```
+
+```
+$ curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+```
+
+```
+$ chmod 700 get_helm.sh
+```
+```
+$ ./get_helm.sh
+```
+```
+Error: could not find tiller
+Helm v3.2.1 is available. Changing from version .
+Downloading https://get.helm.sh/helm-v3.2.1-linux-amd64.tar.gz
+Preparing to install helm into /usr/local/bin
+helm installed into /usr/local/bin/helm
+```
+
+```
+$ helm version
+```
+```
+version.BuildInfo{Version:"v3.2.1", GitCommit:"fe51cd1e31e6a202cba7dead9552a6d418ded79a", GitTreeState:"clean", GoVersion:"go1.13.10"}
 ```
 
 ```
@@ -870,13 +893,14 @@ $ touch helm-consul-values.yaml
 ```
 
 ```yaml
+global:
+  acls:
+    manageSystemACLs: true
+
 server:
   replicas: 1
   bootstrapExpect: 1
   connect: true
-
-connectInject:
-  enabled: true
 
 client:
   enabled: true
@@ -884,14 +908,17 @@ client:
 ui:
   service:
     type: 'LoadBalancer'
+
+connectInject:
+  enabled: true
 ```
 
 ```
-$ helm install consul hashicorp/consul -f helm-consul-values.yaml
+$ helm install hashicorp hashicorp/consul -f helm-consul-values.yaml
 ```
 ```
-NAME: consul
-LAST DEPLOYED: Thu May 14 17:28:03 2020
+NAME: hashicorp
+LAST DEPLOYED: Fri May 15 16:39:06 2020
 NAMESPACE: default
 STATUS: deployed
 REVISION: 1
@@ -904,37 +931,78 @@ Consul with Kubernetes available here:
 https://www.consul.io/docs/platform/k8s/index.html
 
 
-Your release is named consul.
+Your release is named hashicorp.
 
 To learn more about the release if you are using Helm 2, run:
 
-  $ helm status consul
-  $ helm get consul
+  $ helm status hashicorp
+  $ helm get hashicorp
 
 To learn more about the release if you are using Helm 3, run:
 
-  $ helm status consul
-  $ helm get all consul
+  $ helm status hashicorp
+  $ helm get all hashicorp
 ```
 
 ```
 $ kubectl get pods
 ```
 ```
-...
+NAME                                                              READY   STATUS    RESTARTS   AGE
+hashicorp-consul-76x52                                            1/1     Running   0          90s
+hashicorp-consul-9td4g                                            1/1     Running   0          90s
+hashicorp-consul-connect-injector-webhook-deployment-6f96cjrxqm   1/1     Running   0          90s
+hashicorp-consul-m4szz                                            1/1     Running   0          90s
+hashicorp-consul-pvqll                                            1/1     Running   0          90s
+hashicorp-consul-server-0                                         1/1     Running   0          90s
+```
+
+```
+$ kubectl exec -it hashicorp-consul-server-0 /bin/sh
+```
+```
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl kubectl exec [POD] -- [COMMAND] i
+nstead.
+/ #
+```
+
+```
+/ # consul members
+```
+```
+Node                                       Address         Status  Type    Build  Protocol  DC   Segment
+hashicorp-consul-server-0                  10.40.2.5:8301  alive   server  1.7.3  2         dc1  <all>
+gke-cluster-01-default-pool-00f718cd-bp95  10.40.3.3:8301  alive   client  1.7.3  2         dc1  <default>
+gke-cluster-01-default-pool-00f718cd-hdzj  10.40.0.9:8301  alive   client  1.7.3  2         dc1  <default>
+gke-cluster-01-default-pool-00f718cd-kvxd  10.40.2.4:8301  alive   client  1.7.3  2         dc1  <default>
+gke-cluster-01-default-pool-00f718cd-m5x3  10.40.1.3:8301  alive   client  1.7.3  2         dc1  <default>
+```
+
+```
+/ # exit
 ```
 
 ```
 $ kubectl get services
 ```
 ```
-...
+NAME                                    TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)                                                                   AGE
+hashicorp-consul-connect-injector-svc   ClusterIP      10.43.246.84    <none>           443/TCP                                                                   3m55s
+hashicorp-consul-dns                    ClusterIP      10.43.243.94    <none>           53/TCP,53/UDP                                                             3m54s
+hashicorp-consul-server                 ClusterIP      None            <none>           8500/TCP,8301/TCP,8301/UDP,8302/TCP,8302/UDP,8300/TCP,8600/TCP,8600/UDP   3m54s
+hashicorp-consul-ui                     LoadBalancer   10.43.244.143   35.205.152.234   80:31348/TCP                                                              3m55s
+kubernetes                              ClusterIP      10.43.240.1     <none>           443/TCP                                                                   21m
 ```
 
 Let's edit the `service-b.deployment.yaml` and `service-a.deployment.yaml` to add the annotation to automatically inject the sidecar:
 
 ```yaml
 # service-b.deployment.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-b
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -959,6 +1027,8 @@ spec:
         image: patrice1972/service-b:1.0.0
         ports:
         - containerPort: 3001
+      ## If ACLs are enabled, the serviceAccountName must match the Consul service name.
+      serviceAccountName: service-b
 ```
 
 ```
@@ -974,6 +1044,11 @@ $ touch service-a.deployment.yaml
 
 ```yaml
 # service-a.deployment.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-a
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -999,6 +1074,8 @@ spec:
         env:
         - name: SERVICE_B_NAME
           value: "localhost"
+      ## If ACLs are enabled, the serviceAccountName must match the Consul service name.
+      serviceAccountName: service-a
 ```
 
 ```
@@ -1043,4 +1120,48 @@ $ kubectl exec -it service-a-7598597bc8-6pm4w service-a -- /bin/bash
 
 #### Consul Connect SMI Adapter
 
-...
+```
+$ curl -s https://releases.hashicorp.com/consul/1.7.3/consul_1.7.3_linux_amd64.zip -o consul.zip
+```
+
+```
+$ unzip consul.zip
+```
+```
+Archive:  consul.zip
+  inflating: consul
+```
+```
+$ sudo chmod +x consul
+```
+```
+$ sudo mv consul /usr/bin/consul
+```
+
+
+```
+$ git clone https://github.com/hashicorp/consul-smi-controller.git
+```
+
+```
+$ kubectl apply -f consul-smi-controller.yml
+```
+```
+
+```
+
+```
+$ kubectl exec -it helm-consul-consul-5zl6b -- /bin/bash
+```
+
+```
+$ consul agent \
+  -config-dir=/etc/consul.d \
+  -data-dir=/tmp/consul \
+  -node=cloudshell \
+  -bind=172.18.0.1
+```
+
+```
+/ # consul acl token create -description "read/write access for the consul-smi-controller" -policy-name global-management
+```
