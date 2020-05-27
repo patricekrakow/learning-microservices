@@ -815,7 +815,277 @@ root@service-a-8658d565bc-xmffh:/app#
 
 ### Linkerd
 
-_Work in progress..._
+<https://linkerd.io/2/getting-started/>
+
+```
+$ kubectl version --short
+```
+```
+Client Version: v1.18.2
+Server Version: v1.16.8-gke.15
+```
+
+```
+$ curl -sL https://run.linkerd.io/install | sh
+```
+```
+Downloading linkerd2-cli-stable-2.7.1-linux...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   644  100   644    0     0    340      0  0:00:01  0:00:01 --:--:--   340
+100 34.3M  100 34.3M    0     0  9256k      0  0:00:03  0:00:03 --:--:-- 29.4M
+Download complete!
+Validating checksum...
+Checksum valid.
+Linkerd stable-2.7.1 was successfully installed 🎉
+Add the linkerd CLI to your path with:
+  export PATH=$PATH:/home/patrice_krakow/.linkerd2/bin
+Now run:
+  linkerd check --pre                     # validate that Linkerd can be installed
+  linkerd install | kubectl apply -f -    # install the control plane into the 'linkerd' namespace
+  linkerd check                           # validate everything worked!
+  linkerd dashboard                       # launch the dashboard
+Looking for more? Visit https://linkerd.io/2/next-steps
+```
+
+```
+$ export PATH=$PATH:$HOME/.linkerd2/bin
+```
+
+```
+$ linkerd version
+```
+```
+Client version: stable-2.7.1
+Server version: unavailable
+```
+
+```
+$ linkerd check --pre
+```
+```
+kubernetes-api
+--------------
+√ can initialize the client
+× can query the Kubernetes API
+    the server has asked for the client to provide credentials
+    see https://linkerd.io/checks/#k8s-api for hints
+
+Status check results are ×
+```
+
+```
+export KUBECONFIG=~/.kube/config
+```
+
+```
+$ linkerd check --pre
+```
+```
+kubernetes-api
+--------------
+√ can initialize the client
+√ can query the Kubernetes API
+
+kubernetes-version
+------------------
+√ is running the minimum Kubernetes API version
+√ is running the minimum kubectl version
+
+pre-kubernetes-setup
+--------------------
+√ control plane namespace does not already exist
+√ can create non-namespaced resources
+√ can create ServiceAccounts
+√ can create Services
+√ can create Deployments
+√ can create CronJobs
+√ can create ConfigMaps
+√ can create Secrets
+√ can read Secrets
+√ no clock skew detected
+
+pre-kubernetes-capability
+-------------------------
+‼ has NET_ADMIN capability
+    found 1 PodSecurityPolicies, but none provide NET_ADMIN, proxy injection will fail if the PSP admission controller is running
+    see https://linkerd.io/checks/#pre-k8s-cluster-net-admin for hints
+‼ has NET_RAW capability
+    found 1 PodSecurityPolicies, but none provide NET_RAW, proxy injection will fail if the PSP admission controller is running
+    see https://linkerd.io/checks/#pre-k8s-cluster-net-raw for hints
+
+linkerd-version
+---------------
+√ can determine the latest version
+√ cli is up-to-date
+
+Status check results are √
+```
+
+```
+$ linkerd install | kubectl apply -f -
+```
+```
+namespace/linkerd created
+clusterrole.rbac.authorization.k8s.io/linkerd-linkerd-identity created
+clusterrolebinding.rbac.authorization.k8s.io/linkerd-linkerd-identity created
+serviceaccount/linkerd-identity created
+clusterrole.rbac.authorization.k8s.io/linkerd-linkerd-controller created
+clusterrolebinding.rbac.authorization.k8s.io/linkerd-linkerd-controller created
+serviceaccount/linkerd-controller created
+clusterrole.rbac.authorization.k8s.io/linkerd-linkerd-destination created
+clusterrolebinding.rbac.authorization.k8s.io/linkerd-linkerd-destination created
+serviceaccount/linkerd-destination created
+role.rbac.authorization.k8s.io/linkerd-heartbeat created
+rolebinding.rbac.authorization.k8s.io/linkerd-heartbeat created
+serviceaccount/linkerd-heartbeat created
+role.rbac.authorization.k8s.io/linkerd-web created
+rolebinding.rbac.authorization.k8s.io/linkerd-web created
+clusterrole.rbac.authorization.k8s.io/linkerd-linkerd-web-check created
+clusterrolebinding.rbac.authorization.k8s.io/linkerd-linkerd-web-check created
+clusterrolebinding.rbac.authorization.k8s.io/linkerd-linkerd-web-admin created
+serviceaccount/linkerd-web created
+customresourcedefinition.apiextensions.k8s.io/serviceprofiles.linkerd.io created
+customresourcedefinition.apiextensions.k8s.io/trafficsplits.split.smi-spec.io created
+clusterrole.rbac.authorization.k8s.io/linkerd-linkerd-prometheus created
+clusterrolebinding.rbac.authorization.k8s.io/linkerd-linkerd-prometheus created
+serviceaccount/linkerd-prometheus created
+serviceaccount/linkerd-grafana created
+clusterrole.rbac.authorization.k8s.io/linkerd-linkerd-proxy-injector created
+clusterrolebinding.rbac.authorization.k8s.io/linkerd-linkerd-proxy-injector created
+serviceaccount/linkerd-proxy-injector created
+secret/linkerd-proxy-injector-tls created
+mutatingwebhookconfiguration.admissionregistration.k8s.io/linkerd-proxy-injector-webhook-config created
+clusterrole.rbac.authorization.k8s.io/linkerd-linkerd-sp-validator created
+clusterrolebinding.rbac.authorization.k8s.io/linkerd-linkerd-sp-validator created
+serviceaccount/linkerd-sp-validator created
+secret/linkerd-sp-validator-tls created
+validatingwebhookconfiguration.admissionregistration.k8s.io/linkerd-sp-validator-webhook-config created
+clusterrole.rbac.authorization.k8s.io/linkerd-linkerd-tap created
+clusterrole.rbac.authorization.k8s.io/linkerd-linkerd-tap-admin created
+clusterrolebinding.rbac.authorization.k8s.io/linkerd-linkerd-tap created
+clusterrolebinding.rbac.authorization.k8s.io/linkerd-linkerd-tap-auth-delegator created
+serviceaccount/linkerd-tap created
+rolebinding.rbac.authorization.k8s.io/linkerd-linkerd-tap-auth-reader created
+secret/linkerd-tap-tls created
+apiservice.apiregistration.k8s.io/v1alpha1.tap.linkerd.io created
+podsecuritypolicy.policy/linkerd-linkerd-control-plane created
+role.rbac.authorization.k8s.io/linkerd-psp created
+rolebinding.rbac.authorization.k8s.io/linkerd-psp created
+configmap/linkerd-config created
+secret/linkerd-identity-issuer created
+service/linkerd-identity created
+deployment.apps/linkerd-identity created
+service/linkerd-controller-api created
+deployment.apps/linkerd-controller created
+service/linkerd-dst created
+deployment.apps/linkerd-destination created
+cronjob.batch/linkerd-heartbeat created
+service/linkerd-web created
+deployment.apps/linkerd-web created
+configmap/linkerd-prometheus-config created
+service/linkerd-prometheus created
+deployment.apps/linkerd-prometheus created
+configmap/linkerd-grafana-config created
+service/linkerd-grafana created
+deployment.apps/linkerd-grafana created
+deployment.apps/linkerd-proxy-injector created
+service/linkerd-proxy-injector created
+service/linkerd-sp-validator created
+deployment.apps/linkerd-sp-validator created
+service/linkerd-tap created
+deployment.apps/linkerd-tap created
+```
+
+```
+$ linkerd check
+```
+```
+kubernetes-api
+--------------
+√ can initialize the client
+√ can query the Kubernetes API
+
+kubernetes-version
+------------------
+√ is running the minimum Kubernetes API version
+√ is running the minimum kubectl version
+
+linkerd-existence
+-----------------
+√ 'linkerd-config' config map exists
+√ heartbeat ServiceAccount exist
+√ control plane replica sets are ready
+√ no unschedulable pods
+√ controller pod is running
+√ can initialize the client
+√ can query the control plane API
+
+linkerd-config
+--------------
+√ control plane Namespace exists
+√ control plane ClusterRoles exist
+√ control plane ClusterRoleBindings exist
+√ control plane ServiceAccounts exist
+√ control plane CustomResourceDefinitions exist
+√ control plane MutatingWebhookConfigurations exist
+√ control plane ValidatingWebhookConfigurations exist
+√ control plane PodSecurityPolicies exist
+
+linkerd-identity
+----------------
+√ certificate config is valid
+√ trust roots are using supported crypto algorithm
+√ trust roots are within their validity period
+√ trust roots are valid for at least 60 days
+√ issuer cert is using supported crypto algorithm
+√ issuer cert is within its validity period
+√ issuer cert is valid for at least 60 days
+√ issuer cert is issued by the trust root
+
+linkerd-api
+-----------
+√ control plane pods are ready
+√ control plane self-check
+√ [kubernetes] control plane can talk to Kubernetes
+√ [prometheus] control plane can talk to Prometheus
+√ tap api service is running
+
+linkerd-version
+---------------
+√ can determine the latest version
+√ cli is up-to-date
+
+control-plane-version
+---------------------
+√ control plane is up-to-date
+√ control plane and cli versions match
+
+Status check results are √
+```
+
+```
+$ kubectl -n linkerd get deploy
+```
+```
+NAME                     READY   UP-TO-DATE   AVAILABLE   AGE
+linkerd-controller       1/1     1            1           5m5s
+linkerd-destination      1/1     1            1           5m4s
+linkerd-grafana          1/1     1            1           5m4s
+linkerd-identity         1/1     1            1           5m5s
+linkerd-prometheus       1/1     1            1           5m4s
+linkerd-proxy-injector   1/1     1            1           5m3s
+linkerd-sp-validator     1/1     1            1           5m3s
+linkerd-tap              1/1     1            1           5m2s
+linkerd-web              1/1     1            1           5m4s
+```
+
+```
+$ linkerd dashboard --port 8080
+```
+```
+...
+```
 
 ### Istio
 
