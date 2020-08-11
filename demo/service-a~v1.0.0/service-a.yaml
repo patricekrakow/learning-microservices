@@ -13,6 +13,20 @@ metadata:
   name: service-a
   namespace: demo-01
 ---
+# Deploy 'service-a' Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-a-service
+  namespace: demo-01
+spec:
+  selector:
+    app: service-a
+  ports:
+  - protocol: TCP
+    port: 3000
+    targetPort: 3000
+---
 # Deploy 'service-a' Deployment
 apiVersion: apps/v1
 kind: Deployment

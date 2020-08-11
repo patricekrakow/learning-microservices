@@ -35,4 +35,4 @@ spec:
         image: patrice1972/client-x:1.0.0
         env:
         - name: API_HOST
-          value: "10.244.0.16"
+          value: "service-a-service.demo-01"
