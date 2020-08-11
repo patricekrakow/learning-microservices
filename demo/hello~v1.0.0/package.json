@@ -1,0 +1,13 @@
+{
+  "name": "hello-service",
+  "version": "1.0.0",
+  "description": "Implementation of the Hello API",
+  "author": "Patrice Krakow <patrice.krakow@gmail.com>",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
