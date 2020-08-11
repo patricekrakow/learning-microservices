@@ -6,6 +6,13 @@ kind: Namespace
 metadata:
   name: demo-01
 ---
+# Deploy 'client-x' Service Account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: client-x
+  namespace: demo-01
+---
 # Deploy 'client-x' Deployment
 apiVersion: apps/v1
 kind: Deployment
@@ -22,6 +29,7 @@ spec:
       labels:
         app: client-x
     spec:
+      serviceAccountName: client-x
       containers:
       - name: client-x
         image: patrice1972/client-x:1.0.0
