@@ -1,0 +1,24 @@
+# service-a.yaml
+---
+# Deploy 'service-a' Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-a-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-a
+  template:
+    metadata:
+      labels:
+        app: service-a
+    spec:
+      containers:
+      - name: service-a
+        image: patrice1972/service-a:1.0.0
+        ports:
+        - name: service-a-port
+          protocol: TCP
+          containerPort: 3000
