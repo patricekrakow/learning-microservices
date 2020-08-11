@@ -1,0 +1,37 @@
+# hello.yaml
+---
+# Deploy 'hello' Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-service
+spec:
+  selector:
+    app: hello
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: hello-port
+---
+# Deploy 'hello' Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello
+  template:
+    metadata:
+      labels:
+        app: hello
+    spec:
+      containers:
+      - name: hello-service
+        image: patrice1972/hello-service:1.0.0
+        ports:
+        - name: hello-port
+          protocol: TCP
+          containerPort: 3000
