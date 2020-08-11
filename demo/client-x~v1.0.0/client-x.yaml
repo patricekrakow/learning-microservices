@@ -1,0 +1,30 @@
+# client-x.yaml
+---
+# Deploy 'demo-01' Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo-01
+---
+# Deploy 'client-x' Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-x-deployment
+  namespace: demo-01
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client-x
+  template:
+    metadata:
+      labels:
+        app: client-x
+    spec:
+      containers:
+      - name: client-x
+        image: patrice1972/client-x:1.0.0
+        env:
+        - name: API_HOST
+          value: "10.244.0.16"
