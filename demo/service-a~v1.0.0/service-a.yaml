@@ -1,10 +1,17 @@
 # service-a.yaml
 ---
+# Deploy 'demo-01' Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo-01
+---
 # Deploy 'service-a' Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: service-a-deployment
+  namespace: demo-01
 spec:
   replicas: 1
   selector:
