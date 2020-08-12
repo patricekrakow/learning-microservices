@@ -13,6 +13,20 @@ metadata:
   name: client-x
   namespace: demo-01
 ---
+# Deploy 'client-x' (dummy) Service [Required by OSM]
+apiVersion: v1
+kind: Service
+metadata:
+  name: client-x-service
+  namespace: demo-01
+spec:
+  selector:
+    app: client-x
+  ports:
+  - protocol: TCP
+    port: 9999
+    name: dummy-unused-port
+---
 # Deploy 'client-x' Deployment
 apiVersion: apps/v1
 kind: Deployment
