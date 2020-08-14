@@ -17,7 +17,9 @@ metadata:
 apiVersion: v1
 kind: Service
 metadata:
-  name: client-x-service
+  # The name of the Service must match the name the app label;
+  # OSM Bug, see https://github.com/openservicemesh/osm/issues/1524
+  name: client-x
   namespace: demo-01
 spec:
   selector:
